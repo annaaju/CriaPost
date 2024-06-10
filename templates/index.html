@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="/static/publicacao.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CriaPost | Página Inicial</title>
+    <script>
+        function toggleEditForm(postId) {
+            var editForm = document.getElementById('edit-form-' + postId);
+            var postContent = document.getElementById('post-content-' + postId);
+            var editButton = document.getElementById('edit-button-' + postId);
+            var deleteButton = document.getElementById('delete-button-' + postId);
+    
+            if (editForm.style.display === 'none') {
+                editForm.style.display = 'block';
+                postContent.style.display = 'none';
+                editButton.style.display = 'none';
+                deleteButton.style.display = 'none';
+            } else {
+                editForm.style.display = 'none';
+                postContent.style.display = 'block';
+                editButton.style.display = 'inline';
+                deleteButton.style.display = 'inline';
+            }
+        }
+    </script>
+    
+</head>
+<body>
+
+    <div class="header">
+        <h1>CriaPost</h1>
+        <p>
+            Este site tem como intuito ser um acervo de ideias de conteúdo,
+            criando uma comunidade colaborativa para ajudar em bloqueio criativo!
+        </p>
+
+    </div>
+    
+    <!-- Exibir mensagens flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    
+    <div class="welcome">
+        
+        <p>
+            {% if 'username' in session %}
+               <h3> Olá, {{ session['username'] }}!</h3><br>
+                <a href="{{ url_for('logout') }}">Sair da minha conta</a>
+            {% else %}
+                Você não está logado! <a href="{{ url_for('auth') }}">Faça login</a>
+            {% endif %}
+            <br>
+            <a href="{{ url_for('chat') }}">Pedir ajuda para criar conteúdo</a>
+        </p>
+
+    </div>
+
+   
+
+    <!-- Formulário para criar novo post -->
+    {% if 'username' in session %}
+        <div class="post-form">      
+            <form action="{{ url_for('create_post') }}" method="POST">
+                {{ form.csrf_token }}
+                <div>
+                    {{ form.content.label }} {{ form.content(size=32) }}
+                </div>
+                <div>
+                    {{ form.submit(class="btn") }}
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Exibição dos posts -->
+    {% for post in posts %}
+        <div class="post">
+            <div id="post-content-{{ post.id }}">
+                <p>{{ post.content }}</p>
+                <div class="info">
+                    <p>Postado por: {{ post.user.username }}</p>
+                    <p>Data de Criação: {{ post.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+            </div>
+            <!-- Adicionar opções para editar e excluir o post, se o usuário atual for o autor -->
+            {% if 'username' in session and post.user_id == session['user_id'] %}
+                <form id="edit-form-{{ post.id }}" action="{{ url_for('edit_post', post_id=post.id) }}" method="POST" style="display: none;">
+                    {{ form.csrf_token }}
+                    <textarea name="content" rows="2" cols="50">{{ post.content }}</textarea><br>
+                    <button class="btn" type="submit">Salvar</button>
+                    <button class="btn" type="button" onclick="toggleEditForm({{ post.id }})">Cancelar</button>
+                </form>
+                <button id="edit-button-{{ post.id }}" class="btn" onclick="toggleEditForm({{ post.id }})">Editar</button>
+                <form id="delete-button-{{ post.id }}" action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" style="display: inline;">
+                    {{ form.csrf_token }}
+                    <button class="btn" type="submit">Excluir</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endfor %}
+</body>
+</html>

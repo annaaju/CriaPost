@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/publicacao.png" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>CriaPost | Login e Cadastro</title>
+    <script>
+        function toggleForm(form) {
+            var loginForm = document.getElementById('login-form');
+            var registerForm = document.getElementById('register-form');
+            if (form === 'login') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h1>Bem-vindo ao CriaPost!</h1>       
+    </div>
+
+    <div class="choose">
+        <button class="btn" onclick="toggleForm('login')">Login</button>
+        <button class="btn" onclick="toggleForm('register')">Cadastro</button>
+    </div>
+
+    <div class="container">
+          <!-- Exibir mensagens flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flashes">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Formulário de Login -->
+  <div id="login-form" style="display: block;">
+      <form action="{{ url_for('auth') }}" method="POST">
+          {{ login_form.csrf_token }}
+          <div class="form-group">
+              <label>Username</label>
+              {{ login_form.username(class_="form-control", placeholder="Seu nome de usuário") }}
+              {% if login_form.username.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <ul>
+                      {% for e in login_form.username.errors %}
+                          <li>{{ e }}</li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+          </div>
+
+          <div class="form-group">
+              <label>Senha</label>
+              {{ login_form.password(class_="form-control") }}
+              {% if login_form.password.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <ul>
+                      {% for e in login_form.password.errors %}
+                          <li>{{ e }}</li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+          </div>
+
+          <button type="submit" name="login" class="btn btn-default">Logar</button>
+      </form> 
+  </div>
+
+  <!-- Formulário de Cadastro -->
+  <div id="register-form" style="display: none;">
+      <form action="{{ url_for('auth') }}" method="POST">
+          {{ register_form.csrf_token }}
+          <div class="form-group">
+              <label>Username</label>
+              {{ register_form.username(class_="form-control", placeholder="Seu nome de usuário") }}
+              {% if register_form.username.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <ul>
+                      {% for e in register_form.username.errors %}
+                          <li>{{ e }}</li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+          </div>
+
+          <div class="form-group">
+              <label>Email</label>
+              {{ register_form.email(class_="form-control", placeholder="Seu email") }}
+              {% if register_form.email.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <ul>
+                      {% for e in register_form.email.errors %}
+                          <li>{{ e }}</li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+          </div>
+
+          <div class="form-group">
+              <label>Nome</label>
+              {{ register_form.name(class_="form-control", placeholder="Seu nome") }}
+              {% if register_form.name.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <ul>
+                      {% for e in register_form.name.errors %}
+                          <li>{{ e }}</li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+          </div>
+
+          <div class="form-group">
+              <label>Senha</label>
+              {{ register_form.password(class_="form-control", placeholder="Sua senha") }}
+              {% if register_form.password.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <ul>
+                      {% for e in register_form.password.errors %}
+                          <li>{{ e }}</li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+          </div>
+
+          <div class="form-group">
+              <label>Confirmar Senha</label>
+              {{ register_form.confirm(class_="form-control", placeholder="Confirme sua senha") }}
+              {% if register_form.confirm.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <ul>
+                      {% for e in register_form.confirm.errors %}
+                          <li>{{ e }}</li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+          </div>
+
+          <button type="submit" name="register" class="btn btn-default">Registrar</button>
+      </form>
+  </div>
+    </div>
+  
+</body>
+</html>

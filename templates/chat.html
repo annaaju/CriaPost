@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="/static/publicacao.png" type="image/png">
+    <title>CriaPost | Dicas de Conteúdo</title>
+</head>
+<body>
+    <div class="welcome">
+      <h1>Dicas de Conteúdo com IA</h1>
+  
+      <a href="{{ url_for('index') }}">Voltar para Página Inicial</a>
+      <br>
+      
+    </div>
+
+    <div class="container">
+      
+      {% if 'username' in session %}
+    
+      <!-- Exibir mensagens flash -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flashes">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Formulário para interação com o ChatGPT -->
+      <form action="{{ url_for('chat') }}" method="POST">
+          {{ chat_form.csrf_token }}
+          <div class="form-group">
+              <label>Sobre qual assunto você deseja fazer um post sobre?</label>
+              {{ chat_form.prompt(class_="form-control", placeholder="Digite o assunto sobre o qual você quer dicas") }}
+              {% if chat_form.prompt.errors %}
+              <div class="alert alert-danger" role="alert">
+                  <ul>
+                      {% for e in chat_form.prompt.errors %}
+                          <li>{{ e }}</li>
+                      {% endfor %}
+                  </ul>
+              </div>
+              {% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-default">Obter Dicas</button>
+      </form>
+
+      <!-- Exibir a resposta do ChatGPT -->
+      {% if response %}
+      <div class="response">
+          <h2>Dicas:</h2>
+          <p>{{ response }}</p>
+      </div>
+      {% endif %}
+
+    {% else %}
+    Você precisa estar logado para usar essa funcionalidade! <a href="{{ url_for('auth') }}">Faça login</a>
+    {% endif %}
+
+    </div>
+
+    
+</body>
+</html>
+
+
