@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from models.forms import FormFactory
 from flask_login import current_user, login_required, LoginManager, login_user, logout_user, UserMixin
 from datetime import datetime
+from pytz import timezone, utc
 from flask_migrate import Migrate
 from openai import OpenAI
 import logging
@@ -19,7 +20,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 # Configuração da API do OpenAI
-client = OpenAI(api_key="chavedogpt")
+client = OpenAI(api_key="chave")
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -61,7 +62,7 @@ class Post(db.Model):
     def __repr__(self):
         return "<Post %r>" % self.id
 
-# Observer - pattern implementation
+# Observer
 class Subject:
     def __init__(self):
         self._observers = []
@@ -92,7 +93,7 @@ post_notifier = Subject()
 admin_observer = AdminObserver()
 post_notifier.attach(admin_observer)
 
-# Decorator 
+# Decorator
 def log_login_attempts(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -105,16 +106,24 @@ def log_login_attempts(f):
 @app.route('/')
 def index():
     form = FormFactory.create_form('post')
-    posts = Post.query.all()
-    return render_template('index.html', form=form, posts=posts, current_user=current_user)
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+
+    def get_local_time(utc_time):
+        local_timezone = timezone('America/Sao_Paulo')
+        local_time = utc_time.replace(tzinfo=utc).astimezone(local_timezone)
+        return local_time
+
+    return render_template('index.html', form=form, posts=posts, current_user=current_user, get_local_time=get_local_time)
 
 @app.route('/auth', methods=["GET", "POST"])
 @log_login_attempts
 def auth():
     login_form = FormFactory.create_form('login')
     register_form = FormFactory.create_form('register')
+    active_form = 'login'
 
     if 'login' in request.form:
+        active_form = 'login'
         if login_form.validate_on_submit():
             username = login_form.username.data
             password = login_form.password.data
@@ -125,29 +134,38 @@ def auth():
                 session['user_id'] = user.id
                 return redirect(url_for('index'))
             else:
-                flash('Credenciais inválidas. Tente novamente.')
+                flash('Credenciais inválidas. Tente novamente.', 'danger')
+        else:
+                for field, errors in login_form.errors.items():
+                    for error in errors:
+                        flash(f'Erro no campo "{field}": {error}', 'danger')
     elif 'register' in request.form:
+        active_form = 'register'
         if register_form.validate_on_submit():
             username = register_form.username.data
             password = register_form.password.data
             email = register_form.email.data
             name = register_form.name.data
             if User.query.filter_by(username=username).first() is not None:
-                flash('Username já existe. Escolha outro.')
+                flash('Esse Username já existe. Escolha outro.', 'danger')
             elif User.query.filter_by(email=email).first() is not None:
-                flash('Email já cadastrado. Use outro email.')
+                flash('Esse Email já foi cadastrado. Use outro email.', 'danger')
             else:
                 new_user = User(username, password, name, email)
                 db.session.add(new_user)
                 db.session.commit()
-                flash('Cadastro realizado com sucesso! Você já pode fazer login.')
+                flash('Cadastro realizado com sucesso! Você já pode fazer login.', 'success')
                 return redirect(url_for('auth'))
+        else:
+                for field, errors in register_form.errors.items():
+                    for error in errors:
+                        flash(f'Erro no campo "{field}": {error}', 'danger',)
 
-    return render_template('auth.html', login_form=login_form, register_form=register_form)
+    return render_template('auth.html', login_form=login_form, register_form=register_form, active_form=active_form)
 
 @app.route('/logout')
 def logout():
-    logout_user()  
+    logout_user()
     session.pop('username', None)
     return redirect(url_for('index'))
 
@@ -224,11 +242,10 @@ def chat():
         except Exception as e:
             logging.error(f"Erro ao obter resposta do ChatGPT: {e}")
             flash(f"Erro ao obter resposta do ChatGPT: {e}", "error")
-    
+
     return render_template('chat.html', chat_form=chat_form, response=response)
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
