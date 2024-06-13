@@ -12,7 +12,7 @@
             var postContent = document.getElementById('post-content-' + postId);
             var editButton = document.getElementById('edit-button-' + postId);
             var deleteButton = document.getElementById('delete-button-' + postId);
-    
+
             if (editForm.style.display === 'none') {
                 editForm.style.display = 'block';
                 postContent.style.display = 'none';
@@ -26,7 +26,7 @@
             }
         }
     </script>
-    
+
 </head>
 <body>
 
@@ -38,7 +38,7 @@
         </p>
 
     </div>
-    
+
     <!-- Exibir mensagens flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -49,9 +49,9 @@
         </div>
       {% endif %}
     {% endwith %}
-    
+
     <div class="welcome">
-        
+
         <p>
             {% if 'username' in session %}
                <h3> Olá, {{ session['username'] }}!</h3><br>
@@ -65,18 +65,28 @@
 
     </div>
 
-   
+
 
     <!-- Formulário para criar novo post -->
     {% if 'username' in session %}
-        <div class="post-form">      
+        <div class="post-form">
             <form action="{{ url_for('create_post') }}" method="POST">
                 {{ form.csrf_token }}
-                <div>
-                    {{ form.content.label }} {{ form.content(size=32) }}
+                 <div class="form-group">
+                    {{ form.content.label }}
+                    {{ form.content(class_="form-control", rows="5", placeholder="Escreva seu post aqui...") }}
+                    {% if form.content.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <ul>
+                            {% for e in form.content.errors %}
+                                <li>{{ e }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
                 </div>
-                <div>
-                    {{ form.submit(class="btn") }}
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
         </div>
@@ -84,14 +94,15 @@
 
     <!-- Exibição dos posts -->
     {% for post in posts %}
-        <div class="post">
-            <div id="post-content-{{ post.id }}">
-                <p>{{ post.content }}</p>
-                <div class="info">
-                    <p>Postado por: {{ post.user.username }}</p>
-                    <p>Data de Criação: {{ post.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
-                </div>
+    <div class="post">
+
+        <div id="post-content-{{ post.id }}">
+            <p>{{ post.content | replace('\n', '<br>') | safe }}</p>
+            <div class="info">
+                <p>Postado por: {{ post.user.username }}</p>
+                <p>Data de Criação: {{ get_local_time(post.created_at).strftime('%d/%m/%Y %H:%M') }}</p>
             </div>
+        </div>
             <!-- Adicionar opções para editar e excluir o post, se o usuário atual for o autor -->
             {% if 'username' in session and post.user_id == session['user_id'] %}
                 <form id="edit-form-{{ post.id }}" action="{{ url_for('edit_post', post_id=post.id) }}" method="POST" style="display: none;">
@@ -107,6 +118,8 @@
                 </form>
             {% endif %}
         </div>
+
+    </div>
     {% endfor %}
 </body>
 </html>
