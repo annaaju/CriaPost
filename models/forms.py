@@ -9,7 +9,7 @@ class LoginForm(FlaskForm):
 
 class RegisterForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired(), EqualTo('confirm', message='Passwords must match')])
+    password = PasswordField('Password', validators=[DataRequired(), EqualTo('confirm', message='As senhas tem que ser iguais!')])
     confirm = PasswordField('Repeat Password')
     email = StringField('Email', validators=[DataRequired(), Email()])
     name = StringField('Name', validators=[DataRequired()])
@@ -35,4 +35,4 @@ class FormFactory:
         elif form_type == 'chat':
             return ChatForm()
         else:
-            raise ValueError(f"Form type {form_type} is not recognized")
+            raise ValueError(f"Form type {form_type} não é reconhecido")
